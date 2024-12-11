@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"database/sql"
 	"flag"
 	"html/template"
@@ -33,8 +32,6 @@ func main() {
 	addr := flag.String("addr", ":8080", "HTTP Address")
 	dsn := flag.String("dsn", "web:pass@/arabic_tags?parseTime=true",
 		"Data source name")
-	cert := flag.String("cert", "./tls/cert.pem", "location of tls certificate")
-	key := flag.String("key", "./tls/key.pem", "location of tls private key")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
@@ -72,16 +69,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	tlsConfig := &tls.Config{
-		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
-		MinVersion:       tls.VersionTLS13,
-	}
 	server := &http.Server{
 		Handler:      app.routes(),
 		Addr:         *addr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
-		TLSConfig:    tlsConfig,
 	}
 
 	logger.Info("starting server", slog.String("addr", *addr))
