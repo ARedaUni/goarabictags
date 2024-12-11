@@ -85,7 +85,7 @@ func main() {
 	}
 
 	logger.Info("starting server", slog.String("addr", *addr))
-	err = server.ListenAndServeTLS(*cert, *key)
+	err = server.ListenAndServe()
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
