@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -36,7 +37,11 @@ func main() {
 		AddSource: true,
 	}))
 
-	dsn := os.Getenv("DATABASE_URL")
+	dsn := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+		os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_HOST"),
+		os.Getenv("POSTGRES_DB"))
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		logger.Error("cannot open db", slog.String("error", err.Error()))
