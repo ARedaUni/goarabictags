@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for arabic-tags on 2024-12-11T10:36:30Z
+# fly.toml app configuration file generated for arabic-tags on 2024-12-12T11:17:23Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -7,18 +7,16 @@ app = 'arabic-tags'
 primary_region = 'dfw'
 
 [build]
-  dockerfile = 'Dockerfile'
 
 [env]
-  MYSQL_DATABASE = 'arabic_tags'
-  MYSQL_HOST = 'arabic-tags-db.internal'
-  MYSQL_PASSWORD = 'pass'
-  MYSQL_USER = 'web'
+  POSTGRES_DB = "arabic_tags"
+  POSTGRES_USER = "postgres"
+  # The host and password will be automatically set by Fly when you attach the database
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
   processes = ['app']

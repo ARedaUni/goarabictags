@@ -24,9 +24,9 @@ FROM alpine:3.19
 
 WORKDIR /app
 
-# Install MySQL client
+# Install PostgreSQL client
 RUN apk add --no-cache \
-    mysql-client \
+    postgresql-client \
     ca-certificates
 
 # Copy binary and schema
@@ -39,17 +39,17 @@ RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
     echo 'cd /app' >> /app/entrypoint.sh && \
     echo 'max_retries=30' >> /app/entrypoint.sh && \
     echo 'retry_count=0' >> /app/entrypoint.sh && \
-    echo 'while ! mysql -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -e "SELECT 1" >/dev/null 2>&1; do' >> /app/entrypoint.sh && \
-    echo '    echo "Waiting for MySQL... (Attempt $retry_count of $max_retries)"' >> /app/entrypoint.sh && \
+    echo 'while ! pg_isready -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB"; do' >> /app/entrypoint.sh && \
+    echo '    echo "Waiting for PostgreSQL... (Attempt $retry_count of $max_retries)"' >> /app/entrypoint.sh && \
     echo '    retry_count=$((retry_count+1))' >> /app/entrypoint.sh && \
     echo '    if [ $retry_count -ge $max_retries ]; then' >> /app/entrypoint.sh && \
-    echo '        echo "Failed to connect to MySQL after $max_retries attempts"' >> /app/entrypoint.sh && \
+    echo '        echo "Failed to connect to PostgreSQL after $max_retries attempts"' >> /app/entrypoint.sh && \
     echo '        exit 1' >> /app/entrypoint.sh && \
     echo '    fi' >> /app/entrypoint.sh && \
     echo '    sleep 2' >> /app/entrypoint.sh && \
     echo 'done' >> /app/entrypoint.sh && \
-    echo 'echo "MySQL is ready!"' >> /app/entrypoint.sh && \
-    echo 'DSN="$MYSQL_USER:$MYSQL_PASSWORD@tcp($MYSQL_HOST)/$MYSQL_DATABASE?parseTime=true&charset=utf8mb4&collation=utf8mb4_unicode_ci"' >> /app/entrypoint.sh && \
+    echo 'echo "PostgreSQL is ready!"' >> /app/entrypoint.sh && \
+    echo 'DSN="postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST/$POSTGRES_DB?sslmode=disable"' >> /app/entrypoint.sh && \
     echo 'exec bin/web --dsn "$DSN" "$@"' >> /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh
 

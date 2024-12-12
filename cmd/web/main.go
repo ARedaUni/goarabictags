@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/postgresstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/amrojjeh/arabic-tags/internal/models"
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 type application struct {
@@ -30,14 +30,14 @@ type application struct {
 
 func main() {
 	addr := flag.String("addr", ":8080", "HTTP Address")
-	dsn := flag.String("dsn", "web:pass@/arabic_tags?parseTime=true",
-		"Data source name")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
 	}))
-	db, err := sql.Open("mysql", *dsn)
+
+	dsn := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		logger.Error("cannot open db", slog.String("error", err.Error()))
 		os.Exit(1)
@@ -46,14 +46,13 @@ func main() {
 
 	err = db.Ping()
 	if err != nil {
-		logger.Error("cannot open connection with db", slog.String("error",
-			err.Error()))
+		logger.Error("cannot open connection with db", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 
 	session := scs.New()
 	session.Lifetime = 24 * time.Hour
-	session.Store = mysqlstore.New(db)
+	session.Store = postgresstore.New(db)
 
 	app := application{
 		logger:     logger,
@@ -64,14 +63,9 @@ func main() {
 		session:    session,
 	}
 
-	if err != nil {
-		logger.Error("cannot cache templates", slog.String("error", err.Error()))
-		os.Exit(1)
-	}
-
 	server := &http.Server{
 		Handler:      app.routes(),
-		Addr:         *addr,
+		Addr:         "0.0.0.0:8080",
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
